@@ -24,6 +24,7 @@ import pandas as pd
 import numpy as np
 from bertopic import BERTopic
 from sentence_transformers import SentenceTransformer
+from umap import UMAP
 import plotly.io as pio
 
 
@@ -86,11 +87,12 @@ def main() -> None:
 
     np.random.seed(args.seed)
     embedding_model = SentenceTransformer("intfloat/e5-mistral-7b-instruct")
+    umap_model = UMAP(random_state=args.seed)
     topic_model = BERTopic(
         embedding_model=embedding_model,
         calculate_probabilities=False,
         verbose=True,
-        random_state=args.seed,
+        umap_model=umap_model,
     )
     topic_model.fit(texts)
 
