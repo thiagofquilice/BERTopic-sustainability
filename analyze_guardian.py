@@ -1,11 +1,24 @@
 #!/usr/bin/env python3
 """Analyze Guardian paragraphs with BERTopic.
 
-This script loads paragraph-level text from a Guardian export file, fits a
-BERTopic model and saves several outputs including model files, topic
-distributions and visualizations.  The input can be a CSV or JSON file with the
-columns ``id``, ``paragraphs`` and ``date``.  Results are written to the
-specified output directory.
+This script is intended for researchers or journalists who want to quickly
+discover themes in articles from *The Guardian*. Even if you are unfamiliar with
+topic modeling, the process is largely automated. Provide a data file with
+paragraphs, run the script, and it will group similar paragraphs together and
+create several helpful files and visualizations.
+
+Input must be a CSV or JSON file containing the columns ``id``, ``paragraphs``
+and ``date``. Key command-line arguments are:
+
+``--input_file`` – path to the CSV/JSON file.
+``--date_format`` – format string for parsing the ``date`` column. Default
+``%Y-%m-%d``.
+``--out_dir`` – directory where all outputs are saved.
+``--seed`` – random seed controlling the model initialization.
+
+Results include the trained BERTopic model, topic distributions, hierarchical
+visualizations and more. Use these files to interpret how articles discuss
+sustainability-related topics over time.
 """
 from __future__ import annotations
 import argparse

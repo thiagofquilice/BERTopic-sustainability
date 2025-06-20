@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 """Compare topics from two BERTopic models.
 
-The script loads two trained BERTopic models along with their topic frequency
-over time.  It computes cosine and Jaccard similarities between the topic
-embeddings and top words, respectively, and performs a simple temporal
-correlation analysis.  Results are stored as CSV files and HTML
-visualizations in the specified output directory.
+Use this script when you have trained two separate BERTopic models—perhaps on
+different datasets—and you want to see how their topics relate. It calculates
+several similarity measures and even checks whether trends in one dataset might
+help predict the other.
+
+Provide the paths to the saved models via ``--model_a`` and ``--model_b`` along
+with the corresponding ``topics_over_time.csv`` files using ``--topics_a`` and
+``--topics_b``. ``--out_dir`` determines where the comparison results are saved.
+
+Outputs include CSV files of cosine and Jaccard similarity values, a heatmap
+visualization and a simple time-series correlation analysis. These can guide you
+in understanding how topics overlap across the two sources.
 """
 from __future__ import annotations
 import argparse

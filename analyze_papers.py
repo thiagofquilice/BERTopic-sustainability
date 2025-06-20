@@ -1,10 +1,21 @@
 #!/usr/bin/env python3
 """Analyze scientific paper abstracts with BERTopic.
 
-The script reads a CSV or JSON file of scientific publication metadata, fits a
-BERTopic model on the abstract text and saves model outputs.  Expected input
-columns are ``paper_id``, ``abstract`` and ``pub_year``.  Various CSV files and
-HTML visualizations are written to the chosen output directory.
+If you have a dataset of academic publications and want to uncover the common
+themes, this script can help. It requires minimal expertise: supply a spreadsheet
+or JSON file with article abstracts and the year of publication, and BERTopic
+will cluster similar abstracts together.
+
+The input file must contain ``paper_id``, ``abstract`` and ``pub_year`` columns.
+Important arguments you can change:
+
+``--input_file`` – path to the CSV/JSON data file.
+``--out_dir`` – folder for saving the model and outputs.
+``--seed`` – random seed so you can reproduce the same topics.
+
+The script stores the trained model, topic distributions, temporal trends and
+an interactive hierarchy visualization inside ``out_dir``. These outputs let you
+explore how research topics evolve over the years.
 """
 from __future__ import annotations
 import argparse
