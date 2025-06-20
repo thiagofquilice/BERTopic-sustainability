@@ -1,11 +1,17 @@
 # BERTopic Sustainability
 
-This repo contains example scripts for analyzing two text datasets using [BERTopic](https://github.com/MaartenGr/BERTopic). The datasets include Guardian news paragraphs and scientific paper abstracts. Each dataset is modeled separately and then compared.
+This project demonstrates how to explore large amounts of text with
+[BERTopic](https://github.com/MaartenGr/BERTopic). The example datasets include
+Guardian news paragraphs and scientific paper abstracts. Each dataset is modeled
+separately and the topics can then be compared.
 
 ## Contents
-- `analyze_guardian.py` – Fit a BERTopic model on Guardian paragraphs.
+- `analyze_guardian.py` – Fit a BERTopic model on Guardian paragraphs. Arguments
+  include `--input_file`, `--out_dir`, optional `--date_format` and `--seed`.
 - `analyze_papers.py` – Fit a BERTopic model on scientific paper abstracts.
-- `compare_topics.py` – Compare two saved BERTopic models.
+  Arguments include `--input_file`, `--out_dir` and optional `--seed`.
+- `compare_topics.py` – Compare two saved BERTopic models using `--model_a`,
+  `--model_b`, `--topics_a`, `--topics_b` and `--out_dir`.
 - `data/` – Small sample datasets (`guardian_sample.json`, `papers_sample.json`).
 
 Install dependencies with:
@@ -39,7 +45,10 @@ Raw Guardian exports such as `guardian_news_sustainability_with_content_1to5.jso
 
 ```bash
 python prepare_guardian.py guardian_news_sustainability_with_content_*.json \
-  --out_file data/guardian_all.json
+  --output_file data/guardian_all.json
 ```
 
-`prepare_guardian.py` removes the HTML, breaks articles into paragraphs and writes a single JSON file. The output records use the keys `id`, `paragraphs` and `date`, matching the format expected by `analyze_guardian.py`.
+Here `input_files` is a list of one or more raw JSON exports from the Guardian
+(wildcards are allowed). The `--output_file` argument specifies where to write
+the cleaned and merged dataset. The resulting JSON contains the keys `id`,
+`paragraphs` and `date`, ready for use with `analyze_guardian.py`.

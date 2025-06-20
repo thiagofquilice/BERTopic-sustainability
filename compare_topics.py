@@ -1,5 +1,19 @@
 #!/usr/bin/env python3
-"""Compare topics from two BERTopic models."""
+"""Compare topics from two BERTopic models.
+
+Use this script when you have trained two separate BERTopic models—perhaps on
+different datasets—and you want to see how their topics relate. It calculates
+several similarity measures and even checks whether trends in one dataset might
+help predict the other.
+
+Provide the paths to the saved models via ``--model_a`` and ``--model_b`` along
+with the corresponding ``topics_over_time.csv`` files using ``--topics_a`` and
+``--topics_b``. ``--out_dir`` determines where the comparison results are saved.
+
+Outputs include CSV files of cosine and Jaccard similarity values, a heatmap
+visualization and a simple time-series correlation analysis. These can guide you
+in understanding how topics overlap across the two sources.
+"""
 from __future__ import annotations
 import argparse
 from pathlib import Path
@@ -12,14 +26,20 @@ from statsmodels.tsa.stattools import grangercausalitytests
 
 
 def load_model(path: str) -> BERTopic:
+    """Load a BERTopic model from ``path``."""
+
     return BERTopic.load(path)
 
 
 def cosine_matrix(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """Return pairwise cosine similarity between two embedding matrices."""
+
     return cosine_similarity(a, b)
 
 
 def jaccard_matrix(mod_a: BERTopic, mod_b: BERTopic, topn: int = 20) -> pd.DataFrame:
+    """Calculate Jaccard similarity of top words between two models."""
+
     vocab_a = {t: {w for w, _ in mod_a.get_topic(t)[:topn]} for t in mod_a.get_topics()}
     vocab_b = {t: {w for w, _ in mod_b.get_topic(t)[:topn]} for t in mod_b.get_topics()}
     jac = np.zeros((len(vocab_a), len(vocab_b)))
@@ -32,6 +52,8 @@ def jaccard_matrix(mod_a: BERTopic, mod_b: BERTopic, topn: int = 20) -> pd.DataF
 
 
 def top_matches(mat: np.ndarray, n: int = 5) -> list[tuple[int, int, float]]:
+    """Return the top ``n`` matching topic pairs for each row of ``mat``."""
+
     pairs = []
     for i in range(mat.shape[0]):
         idx = np.argsort(mat[i])[::-1][:n]
@@ -41,6 +63,8 @@ def top_matches(mat: np.ndarray, n: int = 5) -> list[tuple[int, int, float]]:
 
 
 def main() -> None:
+    """Run the topic comparison workflow from the command line."""
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--model_a", required=True)
     ap.add_argument("--model_b", required=True)
