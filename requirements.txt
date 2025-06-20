@@ -6,3 +6,4 @@ bertopic>=0.17
 plotly
 scipy
 statsmodels
+beautifulsoup4
