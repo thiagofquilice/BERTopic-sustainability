@@ -32,3 +32,14 @@ python compare_topics.py \
 ```
 
 These commands assume you have installed the packages in `requirements.txt` and have the necessary dependencies for BERTopic.
+
+## Preparing Guardian Data
+
+Raw Guardian exports such as `guardian_news_sustainability_with_content_1to5.json` contain HTML snippets in a `content` field. To combine several of these files into a clean dataset you can run:
+
+```bash
+python prepare_guardian.py guardian_news_sustainability_with_content_*.json \
+  --out_file data/guardian_all.json
+```
+
+`prepare_guardian.py` removes the HTML, breaks articles into paragraphs and writes a single JSON file. The output records use the keys `id`, `paragraphs` and `date`, matching the format expected by `analyze_guardian.py`.
