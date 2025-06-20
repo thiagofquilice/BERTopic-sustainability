@@ -24,6 +24,11 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from bertopic import BERTopic
+from bertopic.representation import (
+    KeyBERTInspired,
+    MaximalMarginalRelevance,
+    PartOfSpeech,
+)
 from sentence_transformers import SentenceTransformer
 from umap import UMAP
 import plotly.io as pio
@@ -116,6 +121,7 @@ def main() -> None:
     umap_model = UMAP(random_state=args.seed)
     topic_model = BERTopic(
         embedding_model=embedding_model,
+        representation_model=representation_model,
         calculate_probabilities=False,
         verbose=True,
         umap_model=umap_model,
