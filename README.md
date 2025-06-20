@@ -8,7 +8,15 @@ This repo contains example scripts for analyzing two text datasets using [BERTop
 - `compare_topics.py` – Compare two saved BERTopic models.
 - `data/` – Small sample datasets (`guardian_sample.json`, `papers_sample.json`).
 
-Each script will create a `requirements.txt` in the output directory if it does not already exist.
+Install dependencies with:
+
+```bash
+pip install -r requirements.txt
+```
+
+Each script will also create a `requirements.txt` in the output directory if it does not already exist.
+
+
 
 ## Usage
 
