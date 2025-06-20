@@ -112,7 +112,7 @@ def main() -> None:
         texts, dates, doc_ids = map(list, zip(*filtered))
 
     np.random.seed(args.seed)
-    embedding_model = SentenceTransformer("intfloat/e5-mistral-7b-instruct")
+    embedding_model = SentenceTransformer("e5-base-v2", device="cpu")
     umap_model = UMAP(random_state=args.seed)
     topic_model = BERTopic(
         embedding_model=embedding_model,
@@ -123,7 +123,7 @@ def main() -> None:
     topic_model.fit(texts)
 
     tots = topic_model.topics_over_time(texts, timestamps=dates, global_tuning=True, nr_bins=20)
-    hier, _ = topic_model.hierarchical_topics(texts)
+    hier = topic_model.hierarchical_topics(texts)
     distr, _ = topic_model.approximate_distribution(texts)
 
     topic_model.save(out_dir / "guardian_bertopic_model")
