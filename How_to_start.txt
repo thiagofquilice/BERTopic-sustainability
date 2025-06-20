@@ -1,40 +1,53 @@
-To run analyze_guardian.py on your remote server:
+How to run ``analyze_guardian.py`` on a remote server
+====================================================
 
-1. Create and activate a virtual environment
+1. **Create and activate a virtual environment**
 
-bash:
+   ```bash
+   cd /home/thiago
+   python3 -m venv guardian-venv
+   source guardian-venv/bin/activate
+   ```
 
-cd /home/thiago
-python3 -m venv guardian-venv
-source guardian-venv/bin/activate
+2. **Install the project requirements**
 
+   ```bash
+   pip install -r /home/thiago/requirements.txt
+   python -m spacy download en_core_web_sm
+   ```
 
-2. Install the project requirements
+3. **Run the analysis**
 
-The repo’s README shows the packages needed:
+   Activate the environment (if not already active) and optionally start a ``tmux`` session so the process continues after you disconnect:
 
-bash:
+   ```bash
+   source /home/thiago/guardian-venv/bin/activate
+   tmux new -s guardian
+   ```
 
-pip install -r /home/thiago/requirements.txt
+   Run the script:
 
+   ```bash
+   python /home/thiago/analyze_guardian.py \
+       --input_file /home/thiago/processed_guardian_news.json \
+       --out_dir /home/thiago/guardian_results
+   ```
 
-3. In each run in the server:
+   To analyze specific years:
 
-bash:
+   ```bash
+   python analyze_guardian.py --input_file data/processed_guardian_news.json \
+       --out_dir results/guardian --years 2019 2021
+   python analyze_papers.py --input_file data/papers_sample.json \
+       --out_dir results/papers --years 2019 2020
+   ```
 
-source /home/thiago/guardian-venv/bin/activate         # if not already active
-tmux new -s guardian                                   # optional, keeps it running when you disconnect
+4. **Reconnect to a running session**
 
-python /home/thiago/analyze_guardian.py \
-    --input_file /home/thiago/processed_guardian_news.json \
-    --out_dir /home/thiago/guardian_results
+   Detach from ``tmux`` with ``Ctrl+b d`` and reattach later with:
 
+   ```bash
+   tmux attach -t guardian
+   ```
 
-
-4. To reconnect, when still running:
-
-Detach from tmux with Ctrl+b d, and reattach later with:
-
-tmux attach -t guardian
-
-Once you activate the existing environment and use that command, the analysis runs without needing to recreate the venv or reinstall dependencies.
+Once the environment is set up, you can reuse it for future runs without recreating the virtual environment or reinstalling dependencies.
