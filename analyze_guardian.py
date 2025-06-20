@@ -1,5 +1,25 @@
 #!/usr/bin/env python3
-"""Analyze Guardian paragraphs with BERTopic."""
+"""Analyze Guardian paragraphs with BERTopic.
+
+This script is intended for researchers or journalists who want to quickly
+discover themes in articles from *The Guardian*. Even if you are unfamiliar with
+topic modeling, the process is largely automated. Provide a data file with
+paragraphs, run the script, and it will group similar paragraphs together and
+create several helpful files and visualizations.
+
+Input must be a CSV or JSON file containing the columns ``id``, ``paragraphs``
+and ``date``. Key command-line arguments are:
+
+``--input_file`` – path to the CSV/JSON file.
+``--date_format`` – format string for parsing the ``date`` column. Default
+``%Y-%m-%d``.
+``--out_dir`` – directory where all outputs are saved.
+``--seed`` – random seed controlling the model initialization.
+
+Results include the trained BERTopic model, topic distributions, hierarchical
+visualizations and more. Use these files to interpret how articles discuss
+sustainability-related topics over time.
+"""
 from __future__ import annotations
 import argparse
 from pathlib import Path
@@ -31,6 +51,8 @@ def read_data(path: str, date_format: str) -> tuple[list[str], list[datetime], l
 
 
 def ensure_requirements(outdir: Path) -> None:
+    """Write a requirements file to ``outdir`` if it does not exist."""
+
     reqs = [
         "pandas",
         "numpy",
@@ -47,6 +69,8 @@ def ensure_requirements(outdir: Path) -> None:
 
 
 def main() -> None:
+    """Command-line interface for fitting a BERTopic model."""
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--input_file", required=True)
     ap.add_argument("--date_format", default="%Y-%m-%d")

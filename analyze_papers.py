@@ -1,5 +1,22 @@
 #!/usr/bin/env python3
-"""Analyze scientific paper abstracts with BERTopic."""
+"""Analyze scientific paper abstracts with BERTopic.
+
+If you have a dataset of academic publications and want to uncover the common
+themes, this script can help. It requires minimal expertise: supply a spreadsheet
+or JSON file with article abstracts and the year of publication, and BERTopic
+will cluster similar abstracts together.
+
+The input file must contain ``paper_id``, ``abstract`` and ``pub_year`` columns.
+Important arguments you can change:
+
+``--input_file`` – path to the CSV/JSON data file.
+``--out_dir`` – folder for saving the model and outputs.
+``--seed`` – random seed so you can reproduce the same topics.
+
+The script stores the trained model, topic distributions, temporal trends and
+an interactive hierarchy visualization inside ``out_dir``. These outputs let you
+explore how research topics evolve over the years.
+"""
 from __future__ import annotations
 import argparse
 from pathlib import Path
@@ -28,6 +45,8 @@ def read_data(path: str) -> tuple[list[str], list[int], list[str]]:
 
 
 def ensure_requirements(outdir: Path) -> None:
+    """Create ``requirements.txt`` in ``outdir`` if missing."""
+
     reqs = [
         "pandas",
         "numpy",
@@ -44,6 +63,8 @@ def ensure_requirements(outdir: Path) -> None:
 
 
 def main() -> None:
+    """Entry point for the papers analysis command-line tool."""
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--input_file", required=True)
     ap.add_argument("--out_dir", required=True)
