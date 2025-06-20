@@ -53,3 +53,12 @@ can still pass individual paths as positional `input_files` if needed. The
 `--output_file` argument specifies where to write the cleaned and merged dataset.
 The resulting JSON contains the keys `id`, `paragraphs` and `date`, ready for
 use with `analyze_guardian.py`.
+
+## Extra step for richer topic labels
+Some scripts optionally use POS filtering for cleaner keywords.
+Install spaCy and download the English model once:
+
+```bash
+pip install -U spacy
+python -m spacy download en_core_web_sm
+```
