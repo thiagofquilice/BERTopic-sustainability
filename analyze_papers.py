@@ -110,20 +110,14 @@ def main() -> None:
         texts, years, ids = map(list, zip(*filtered))
 
     np.random.seed(args.seed)
+
     embedding_model = SentenceTransformer("intfloat/e5-base-v2", device="cpu")
     representation_model = {
         "KeyBERT": KeyBERTInspired(),
         "MMR": MaximalMarginalRelevance(diversity=0.3),
+        "POS": PartOfSpeech("en_core_web_sm"),
     }
-    try:
-        import spacy
-        from spacy.util import is_package
-
-        if is_package("en_core_web_sm"):
-            representation_model["POS"] = PartOfSpeech("en_core_web_sm")
-    except Exception:
-        # spaCy not available; proceed without POS keywords
-        pass
+    
     umap_model = UMAP(random_state=args.seed)
     topic_model = BERTopic(
         embedding_model=embedding_model,
