@@ -28,6 +28,11 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 from bertopic import BERTopic
+from bertopic.representation import (
+    KeyBERTInspired,
+    MaximalMarginalRelevance,
+    PartOfSpeech,
+)
 from sentence_transformers import SentenceTransformer
 from umap import UMAP
 import plotly.io as pio
@@ -112,10 +117,18 @@ def main() -> None:
         texts, dates, doc_ids = map(list, zip(*filtered))
 
     np.random.seed(args.seed)
-    embedding_model = SentenceTransformer("e5-base-v2", device="cpu")
+
+    embedding_model = SentenceTransformer("intfloat/e5-base-v2", device="cpu")
+    representation_model = {
+        "KeyBERT": KeyBERTInspired(),
+        "MMR": MaximalMarginalRelevance(diversity=0.3),
+        "POS": PartOfSpeech("en_core_web_sm"),
+    }
+
     umap_model = UMAP(random_state=args.seed)
     topic_model = BERTopic(
         embedding_model=embedding_model,
+        representation_model=representation_model,
         calculate_probabilities=False,
         verbose=True,
         umap_model=umap_model,
