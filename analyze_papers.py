@@ -12,6 +12,7 @@ Important arguments you can change:
 ``--input_file`` – path to the CSV/JSON data file.
 ``--out_dir`` – folder for saving the model and outputs.
 ``--seed`` – random seed so you can reproduce the same topics.
+``--years`` – optional list of publication years to include.
 
 The script stores the trained model, topic distributions, temporal trends and
 an interactive hierarchy visualization inside ``out_dir``. These outputs let you
@@ -24,6 +25,7 @@ import pandas as pd
 import numpy as np
 from bertopic import BERTopic
 from sentence_transformers import SentenceTransformer
+from umap import UMAP
 import plotly.io as pio
 
 
@@ -69,6 +71,12 @@ def main() -> None:
     ap.add_argument("--input_file", required=True)
     ap.add_argument("--out_dir", required=True)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument(
+        "--years",
+        nargs="+",
+        type=int,
+        help="Only analyze papers from these publication years",
+    )
     args = ap.parse_args()
 
     out_dir = Path(args.out_dir)
@@ -84,13 +92,26 @@ def main() -> None:
         print("No valid documents found.")
         return
 
+    if args.years:
+        yrs = set(args.years)
+        filtered = [
+            (t, y, i)
+            for t, y, i in zip(texts, years, ids)
+            if y in yrs
+        ]
+        if not filtered:
+            print("No papers found for the selected years.")
+            return
+        texts, years, ids = map(list, zip(*filtered))
+
     np.random.seed(args.seed)
     embedding_model = SentenceTransformer("intfloat/e5-mistral-7b-instruct")
+    umap_model = UMAP(random_state=args.seed)
     topic_model = BERTopic(
         embedding_model=embedding_model,
         calculate_probabilities=False,
         verbose=True,
-        random_state=args.seed,
+        umap_model=umap_model,
     )
     topic_model.fit(texts)
 
