@@ -41,7 +41,7 @@ These commands assume you have installed the packages in `requirements.txt` and 
 
 ## Preparing Guardian Data
 
-Raw Guardian exports such as `guardian_news_sustainability_with_content_1to5.json` contain HTML snippets in a `content` field. To combine several of these files into a clean dataset you can run:
+Raw Guardian exports such as `guardian_news_sustainability_with_content_1to5.json` (not included due to size) contain HTML snippets in a `content` field. To combine several of these files into a clean dataset you can run:
 
 ```bash
 python prepare_guardian.py --input_dir 2_news_json_files \
@@ -62,3 +62,61 @@ Install spaCy and download the English model once:
 pip install -U spacy
 python -m spacy download en_core_web_sm
 ```
+
+## Running on a remote server
+
+The snippet below demonstrates how to configure a virtual environment and run
+`analyze_guardian.py` on a remote machine. Adjust the paths for your own setup.
+
+1. **Create and activate a virtual environment**
+
+   ```bash
+   cd /home/thiago
+   python3 -m venv guardian-venv
+   source guardian-venv/bin/activate
+   ```
+
+2. **Install the requirements**
+
+   ```bash
+   pip install -r /home/thiago/requirements.txt
+   python -m spacy download en_core_web_sm
+   ```
+
+3. **Run the analysis**
+
+   Activate the environment if needed and optionally start a `tmux` session so
+   the command continues running after you disconnect:
+
+   ```bash
+   source /home/thiago/guardian-venv/bin/activate
+   tmux new -s guardian
+   ```
+
+   Then execute the script:
+
+   ```bash
+   python /home/thiago/analyze_guardian.py \
+       --input_file /home/thiago/processed_guardian_news.json \
+       --out_dir /home/thiago/guardian_results
+   ```
+
+   To filter by year:
+
+   ```bash
+   python analyze_guardian.py --input_file data/processed_guardian_news.json \
+       --out_dir results/guardian --years 2019 2021
+   python analyze_papers.py --input_file data/papers_sample.json \
+       --out_dir results/papers --years 2019 2020
+   ```
+
+4. **Reconnect to a running session**
+
+   Detach from `tmux` with `Ctrl+b d` and reattach later with:
+
+   ```bash
+   tmux attach -t guardian
+   ```
+
+Once the environment is set up you can reuse it for future runs without
+recreating the virtual environment or reinstalling dependencies.
