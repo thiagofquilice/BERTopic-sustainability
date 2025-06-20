@@ -1,0 +1,40 @@
+To run analyze_guardian.py on your remote server:
+
+1. Create and activate a virtual environment
+
+bash:
+
+cd /home/thiago
+python3 -m venv guardian-venv
+source guardian-venv/bin/activate
+
+
+2. Install the project requirements
+
+The repo’s README shows the packages needed:
+
+bash:
+
+pip install -r /home/thiago/requirements.txt
+
+
+3. In each run in the server:
+
+bash:
+
+source /home/thiago/guardian-venv/bin/activate         # if not already active
+tmux new -s guardian                                   # optional, keeps it running when you disconnect
+
+python /home/thiago/analyze_guardian.py \
+    --input_file /home/thiago/processed_guardian_news.json \
+    --out_dir /home/thiago/guardian_results
+
+
+
+4. To reconnect, when still running:
+
+Detach from tmux with Ctrl+b d, and reattach later with:
+
+tmux attach -t guardian
+
+Once you activate the existing environment and use that command, the analysis runs without needing to recreate the venv or reinstall dependencies.
