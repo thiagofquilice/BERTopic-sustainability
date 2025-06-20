@@ -24,6 +24,11 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from bertopic import BERTopic
+from bertopic.representation import (
+    KeyBERTInspired,
+    MaximalMarginalRelevance,
+    PartOfSpeech,
+)
 from sentence_transformers import SentenceTransformer
 from umap import UMAP
 import plotly.io as pio
@@ -105,6 +110,20 @@ def main() -> None:
         texts, years, ids = map(list, zip(*filtered))
 
     np.random.seed(args.seed)
+    representation_model = {
+        "KeyBERT": KeyBERTInspired(),
+        "MMR": MaximalMarginalRelevance(diversity=0.3),
+    }
+    try:
+        import spacy
+        from spacy.util import is_package
+
+        if is_package("en_core_web_sm"):
+            representation_model["POS"] = PartOfSpeech("en_core_web_sm")
+    except Exception:
+        # spaCy not available; proceed without POS keywords
+        pass
+        representation_model=representation_model,
 
     embedding_model = SentenceTransformer("intfloat/e5-base-v2", device="cpu")
     representation_model = {

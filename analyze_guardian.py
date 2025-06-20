@@ -117,7 +117,15 @@ def main() -> None:
         texts, dates, doc_ids = map(list, zip(*filtered))
 
     np.random.seed(args.seed)
+    try:
+        import spacy
+        from spacy.util import is_package
 
+        if is_package("en_core_web_sm"):
+            representation_model["POS"] = PartOfSpeech("en_core_web_sm")
+    except Exception:
+        # spaCy not available; proceed without POS keywords
+        pass
     embedding_model = SentenceTransformer("intfloat/e5-base-v2", device="cpu")
     representation_model = {
         "KeyBERT": KeyBERTInspired(),
