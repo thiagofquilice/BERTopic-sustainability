@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Analyze scientific paper abstracts with BERTopic."""
+"""Analyze scientific paper abstracts with BERTopic.
+
+The script reads a CSV or JSON file of scientific publication metadata, fits a
+BERTopic model on the abstract text and saves model outputs.  Expected input
+columns are ``paper_id``, ``abstract`` and ``pub_year``.  Various CSV files and
+HTML visualizations are written to the chosen output directory.
+"""
 from __future__ import annotations
 import argparse
 from pathlib import Path
@@ -28,6 +34,8 @@ def read_data(path: str) -> tuple[list[str], list[int], list[str]]:
 
 
 def ensure_requirements(outdir: Path) -> None:
+    """Create ``requirements.txt`` in ``outdir`` if missing."""
+
     reqs = [
         "pandas",
         "numpy",
@@ -44,6 +52,8 @@ def ensure_requirements(outdir: Path) -> None:
 
 
 def main() -> None:
+    """Entry point for the papers analysis command-line tool."""
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--input_file", required=True)
     ap.add_argument("--out_dir", required=True)

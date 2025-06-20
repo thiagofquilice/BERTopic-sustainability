@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Prepare Guardian article content into paragraph-level JSON."""
+"""Prepare Guardian article content into paragraph-level JSON.
+
+The raw Guardian export files contain HTML under a ``content`` field.  This
+script extracts plain-text paragraphs, normalizes publication dates and writes a
+consolidated JSON file suitable for the analysis scripts in this repository.
+"""
 from __future__ import annotations
 
 import argparse
@@ -44,6 +49,8 @@ def extract_paragraphs(html_str: str) -> list[str]:
 
 
 def process_file(path: Path) -> list[dict[str, object]]:
+    """Return cleaned paragraph data from a raw Guardian export file."""
+
     articles = json.loads(path.read_text())
     processed = []
     for art in articles:
@@ -64,6 +71,8 @@ def process_file(path: Path) -> list[dict[str, object]]:
 
 
 def main() -> None:
+    """Command-line interface for preparing Guardian content."""
+
     ap = argparse.ArgumentParser(description="Prepare Guardian HTML content")
     ap.add_argument("input_files", nargs="+", help="Input JSON files")
     ap.add_argument("--output_file", required=True, help="Output JSON file")

@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Analyze Guardian paragraphs with BERTopic."""
+"""Analyze Guardian paragraphs with BERTopic.
+
+This script loads paragraph-level text from a Guardian export file, fits a
+BERTopic model and saves several outputs including model files, topic
+distributions and visualizations.  The input can be a CSV or JSON file with the
+columns ``id``, ``paragraphs`` and ``date``.  Results are written to the
+specified output directory.
+"""
 from __future__ import annotations
 import argparse
 from pathlib import Path
@@ -31,6 +38,8 @@ def read_data(path: str, date_format: str) -> tuple[list[str], list[datetime], l
 
 
 def ensure_requirements(outdir: Path) -> None:
+    """Write a requirements file to ``outdir`` if it does not exist."""
+
     reqs = [
         "pandas",
         "numpy",
@@ -47,6 +56,8 @@ def ensure_requirements(outdir: Path) -> None:
 
 
 def main() -> None:
+    """Command-line interface for fitting a BERTopic model."""
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--input_file", required=True)
     ap.add_argument("--date_format", default="%Y-%m-%d")
