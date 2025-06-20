@@ -112,7 +112,7 @@ def main() -> None:
         texts, dates, doc_ids = map(list, zip(*filtered))
 
     np.random.seed(args.seed)
-    embedding_model = SentenceTransformer("e5-base-v2", device="cpu")
+    embedding_model = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
     umap_model = UMAP(random_state=args.seed)
     topic_model = BERTopic(
         embedding_model=embedding_model,
