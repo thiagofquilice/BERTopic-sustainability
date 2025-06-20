@@ -44,11 +44,12 @@ These commands assume you have installed the packages in `requirements.txt` and 
 Raw Guardian exports such as `guardian_news_sustainability_with_content_1to5.json` contain HTML snippets in a `content` field. To combine several of these files into a clean dataset you can run:
 
 ```bash
-python prepare_guardian.py guardian_news_sustainability_with_content_*.json \
+python prepare_guardian.py --input_dir 2_news_json_files \
   --output_file data/guardian_all.json
 ```
 
-Here `input_files` is a list of one or more raw JSON exports from the Guardian
-(wildcards are allowed). The `--output_file` argument specifies where to write
-the cleaned and merged dataset. The resulting JSON contains the keys `id`,
-`paragraphs` and `date`, ready for use with `analyze_guardian.py`.
+By default the script reads all `.json` files inside `2_news_json_files`. You
+can still pass individual paths as positional `input_files` if needed. The
+`--output_file` argument specifies where to write the cleaned and merged dataset.
+The resulting JSON contains the keys `id`, `paragraphs` and `date`, ready for
+use with `analyze_guardian.py`.

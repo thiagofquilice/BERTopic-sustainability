@@ -79,13 +79,25 @@ def main() -> None:
     """Command-line interface for preparing Guardian content."""
 
     ap = argparse.ArgumentParser(description="Prepare Guardian HTML content")
-    ap.add_argument("input_files", nargs="+", help="Input JSON files")
+    ap.add_argument("input_files", nargs="*", help="Input JSON files")
+    ap.add_argument(
+        "--input_dir",
+        default="2_news_json_files",
+        help="Directory containing JSON files (default: 2_news_json_files)",
+    )
     ap.add_argument("--output_file", required=True, help="Output JSON file")
     args = ap.parse_args()
 
     all_rows: list[dict[str, object]] = []
-    for fname in args.input_files:
-        rows = process_file(Path(fname))
+    input_paths = [Path(f) for f in args.input_files]
+    if args.input_dir:
+        input_paths.extend(sorted(Path(args.input_dir).glob("*.json")))
+
+    if not input_paths:
+        ap.error("No input files found")
+
+    for path in input_paths:
+        rows = process_file(path)
         all_rows.extend(rows)
 
     Path(args.output_file).write_text(json.dumps(all_rows, ensure_ascii=False, indent=2))
