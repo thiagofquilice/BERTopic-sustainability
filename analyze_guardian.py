@@ -117,12 +117,14 @@ def main() -> None:
         texts, dates, doc_ids = map(list, zip(*filtered))
 
     np.random.seed(args.seed)
+
     embedding_model = SentenceTransformer("intfloat/e5-base-v2", device="cpu")
     representation_model = {
         "KeyBERT": KeyBERTInspired(),
         "MMR": MaximalMarginalRelevance(diversity=0.3),
         "POS": PartOfSpeech("en_core_web_sm"),
     }
+
     umap_model = UMAP(random_state=args.seed)
     topic_model = BERTopic(
         embedding_model=embedding_model,
