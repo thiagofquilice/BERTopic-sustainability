@@ -7,9 +7,9 @@ separately and the topics can then be compared.
 
 ## Contents
 - `analyze_guardian.py` – Fit a BERTopic model on Guardian paragraphs. Arguments
-  include `--input_file`, `--out_dir`, optional `--date_format` and `--seed`.
+  include `--input_file`, `--out_dir`, optional `--date_format`, `--seed` and optional `--years`.
 - `analyze_papers.py` – Fit a BERTopic model on scientific paper abstracts.
-  Arguments include `--input_file`, `--out_dir` and optional `--seed`.
+  Arguments include `--input_file`, `--out_dir`, optional `--seed` and optional `--years`.
 - `compare_topics.py` – Compare two saved BERTopic models using `--model_a`,
   `--model_b`, `--topics_a`, `--topics_b` and `--out_dir`.
 - `data/` – Small sample datasets (`guardian_sample.json`, `papers_sample.json`).
@@ -27,8 +27,8 @@ Each script will also create a `requirements.txt` in the output directory if it 
 ## Usage
 
 ```bash
-python analyze_guardian.py --input_file data/guardian_sample.json --out_dir results/guardian
-python analyze_papers.py --input_file data/papers_sample.json --out_dir results/papers
+python analyze_guardian.py --input_file data/guardian_sample.json --out_dir results/guardian --years 2020 2021
+python analyze_papers.py --input_file data/papers_sample.json --out_dir results/papers --years 2019 2020
 python compare_topics.py \
   --model_a results/guardian/guardian_bertopic_model \
   --model_b results/papers/papers_bertopic_model \

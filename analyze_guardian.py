@@ -15,6 +15,7 @@ and ``date``. Key command-line arguments are:
 ``%Y-%m-%d``.
 ``--out_dir`` – directory where all outputs are saved.
 ``--seed`` – random seed controlling the model initialization.
+``--years`` – optional list of years to include in the analysis.
 
 Results include the trained BERTopic model, topic distributions, hierarchical
 visualizations and more. Use these files to interpret how articles discuss
@@ -77,6 +78,12 @@ def main() -> None:
     ap.add_argument("--date_format", default="%Y-%m-%d")
     ap.add_argument("--out_dir", required=True)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument(
+        "--years",
+        nargs="+",
+        type=int,
+        help="Only analyze documents whose year is in this list",
+    )
     args = ap.parse_args()
 
     out_dir = Path(args.out_dir)
@@ -91,6 +98,18 @@ def main() -> None:
     if not texts:
         print("No valid documents found.")
         return
+
+    if args.years:
+        yrs = set(args.years)
+        filtered = [
+            (t, d, i)
+            for t, d, i in zip(texts, dates, doc_ids)
+            if d.year in yrs
+        ]
+        if not filtered:
+            print("No documents found for the selected years.")
+            return
+        texts, dates, doc_ids = map(list, zip(*filtered))
 
     np.random.seed(args.seed)
     embedding_model = SentenceTransformer("intfloat/e5-mistral-7b-instruct")
