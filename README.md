@@ -1,9 +1,12 @@
 # BERTopic Sustainability
 
 This project demonstrates how to explore large amounts of text with
-[BERTopic](https://github.com/MaartenGr/BERTopic). The example datasets include
-Guardian news paragraphs and scientific paper abstracts. Each dataset is modeled
-separately and the topics can then be compared.
+[BERTopic](https://github.com/MaartenGr/BERTopic). BERTopic builds on
+transformer-based embeddings and clustering to create interpretable topics with minimal
+preprocessing. It offers interactive visualizations and multilingual support.
+For a deeper overview see the [official BERTopic documentation](https://maartengr.github.io/BERTopic/index.html).
+The example datasets include Guardian news paragraphs and scientific paper abstracts.
+Each dataset is modeled separately and the topics can then be compared.
 
 ## Contents
 - `analyze_guardian.py` – Fit a BERTopic model on Guardian paragraphs. Arguments
@@ -53,15 +56,6 @@ can still pass individual paths as positional `input_files` if needed. The
 `--output_file` argument specifies where to write the cleaned and merged dataset.
 The resulting JSON contains the keys `id`, `paragraphs` and `date`, ready for
 use with `analyze_guardian.py`.
-
-## Extra step for richer topic labels
-Some scripts optionally use POS filtering for cleaner keywords.
-Install spaCy and download the English model once:
-
-```bash
-pip install -U spacy
-python -m spacy download en_core_web_sm
-```
 
 ## Running on a remote server
 
