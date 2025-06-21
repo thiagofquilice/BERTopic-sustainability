@@ -1,9 +1,10 @@
 # BERTopic Sustainability
 
-This project demonstrates how to explore large amounts of text with
-[BERTopic](https://github.com/MaartenGr/BERTopic). The example datasets include
-Guardian news paragraphs and scientific paper abstracts. Each dataset is modeled
-separately and the topics can then be compared.
+This repository showcases how to explore large collections of text with
+[BERTopic](https://github.com/MaartenGr/BERTopic).  Two small example datasets
+are provided – Guardian news paragraphs and scientific paper abstracts – but the
+code can be applied to any domain.  Each dataset is modeled separately and the
+resulting topics can then be compared.
 
 ## Contents
 - `analyze_guardian.py` – Fit a BERTopic model on Guardian paragraphs. Arguments
@@ -27,8 +28,8 @@ Each script will also create a `requirements.txt` in the output directory if it 
 ## Usage
 
 ```bash
-python analyze_guardian.py --input_file data/guardian_sample.json --out_dir results/guardian --years 2020 2021
-python analyze_papers.py --input_file data/papers_sample.json --out_dir results/papers --years 2019 2020
+python analyze_guardian.py --input_file data/guardian_sample.json --out_dir results/guardian
+python analyze_papers.py --input_file data/papers_sample.json --out_dir results/papers
 python compare_topics.py \
   --model_a results/guardian/guardian_bertopic_model \
   --model_b results/papers/papers_bertopic_model \
@@ -39,20 +40,13 @@ python compare_topics.py \
 
 These commands assume you have installed the packages in `requirements.txt` and have the necessary dependencies for BERTopic.
 
-## Preparing Guardian Data
+## Data format
 
-Raw Guardian exports such as `guardian_news_sustainability_with_content_1to5.json` (not included due to size) contain HTML snippets in a `content` field. To combine several of these files into a clean dataset you can run:
-
-```bash
-python prepare_guardian.py --input_dir 2_news_json_files \
-  --output_file data/guardian_all.json
-```
-
-By default the script reads all `.json` files inside `2_news_json_files`. You
-can still pass individual paths as positional `input_files` if needed. The
-`--output_file` argument specifies where to write the cleaned and merged dataset.
-The resulting JSON contains the keys `id`, `paragraphs` and `date`, ready for
-use with `analyze_guardian.py`.
+Your input files can be CSV, JSON or JSONL. The Guardian dataset must provide
+columns named `id`, `paragraphs` and `date` where `paragraphs` is a list of
+strings and `date` follows the format supplied by `--date_format` (default
+`%Y-%m-%d`). The papers dataset must include `paper_id`, `abstract` and
+`pub_year` columns.
 
 ## Extra step for richer topic labels
 Some scripts optionally use POS filtering for cleaner keywords.
@@ -101,14 +95,7 @@ The snippet below demonstrates how to configure a virtual environment and run
        --out_dir /home/thiago/guardian_results
    ```
 
-   To filter by year:
-
-   ```bash
-   python analyze_guardian.py --input_file data/processed_guardian_news.json \
-       --out_dir results/guardian --years 2019 2021
-   python analyze_papers.py --input_file data/papers_sample.json \
-       --out_dir results/papers --years 2019 2020
-   ```
+   You can now close the terminal or detach from `tmux` while the analysis runs.
 
 4. **Reconnect to a running session**
 
