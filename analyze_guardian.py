@@ -116,6 +116,10 @@ def main() -> None:
             return
         texts, dates, doc_ids = map(list, zip(*filtered))
 
+    # Prepare yearly timestamps for grouping by calendar year
+    unique_years = sorted({d.year for d in dates})
+    year_stamps = [datetime(year=d.year, month=1, day=1) for d in dates]
+
     np.random.seed(args.seed)
 
     embedding_model = SentenceTransformer("intfloat/e5-base-v2", device="cpu")
@@ -135,7 +139,12 @@ def main() -> None:
     )
     topic_model.fit(texts)
 
-    tots = topic_model.topics_over_time(texts, timestamps=dates, global_tuning=True, nr_bins=20)
+    tots = topic_model.topics_over_time(
+        texts,
+        timestamps=year_stamps,
+        global_tuning=False,
+        nr_bins=len(unique_years),
+    )
     hier = topic_model.hierarchical_topics(texts)
     distr, _ = topic_model.approximate_distribution(texts)
 
@@ -147,7 +156,7 @@ def main() -> None:
             rep_docs.append({"topic": topic, "rep_doc": doc})
     pd.DataFrame(rep_docs).to_csv(out_dir / "representative_docs.csv", index=False)
     pd.DataFrame(distr, index=doc_ids).to_csv(out_dir / "topic_distribution.csv")
-    tots.to_csv(out_dir / "topics_over_time.csv", index=False)
+    tots.to_csv(out_dir / "topics_over_year.csv", index=False)
     pd.DataFrame(hier).to_csv(out_dir / "hierarchical_topics.csv", index=False)
 
     fig = topic_model.visualize_hierarchy()

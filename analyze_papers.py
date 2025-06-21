@@ -21,6 +21,7 @@ explore how research topics evolve over the years.
 from __future__ import annotations
 import argparse
 from pathlib import Path
+from datetime import datetime
 import pandas as pd
 import numpy as np
 from bertopic import BERTopic
@@ -107,7 +108,13 @@ def main() -> None:
         if not filtered:
             print("No papers found for the selected years.")
             return
+
         texts, years, ids = map(list, zip(*filtered))
+
+    # Prepare yearly timestamps for grouping by calendar year
+    dates = [datetime(year=y, month=1, day=1) for y in years]
+    unique_years = sorted({d.year for d in dates})
+    year_stamps = [datetime(year=d.year, month=1, day=1) for d in dates]
 
     np.random.seed(args.seed)
 
@@ -128,7 +135,12 @@ def main() -> None:
     )
     topic_model.fit(texts)
 
-    tots = topic_model.topics_over_time(texts, timestamps=years, global_tuning=True, nr_bins=None)
+    tots = topic_model.topics_over_time(
+        texts,
+        timestamps=year_stamps,
+        global_tuning=False,
+        nr_bins=len(unique_years),
+    )
     hier = topic_model.hierarchical_topics(texts)
     distr, _ = topic_model.approximate_distribution(texts)
 
@@ -140,7 +152,7 @@ def main() -> None:
             rep_docs.append({"topic": topic, "rep_doc": doc})
     pd.DataFrame(rep_docs).to_csv(out_dir / "representative_docs.csv", index=False)
     pd.DataFrame(distr, index=ids).to_csv(out_dir / "topic_distribution.csv")
-    tots.to_csv(out_dir / "topics_over_time.csv", index=False)
+    tots.to_csv(out_dir / "topics_over_year.csv", index=False)
     pd.DataFrame(hier).to_csv(out_dir / "hierarchical_topics.csv", index=False)
 
     fig = topic_model.visualize_hierarchy()
