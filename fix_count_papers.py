@@ -58,8 +58,12 @@ def process_file(in_path: Path, out_path: Path) -> tuple[int, Counter, Counter]:
     year_counter: Counter[int] = Counter()
     total = 0
 
-    with in_path.open("r", encoding="utf-8") as inf, out_path.open(
-        "w", encoding="utf-8"
+    # ``surrogatepass`` allows us to round-trip potentially malformed
+    # Unicode that may appear in the data. Some records contain lone
+    # surrogate characters which would otherwise raise ``UnicodeEncodeError``
+    # on write. Using this error handler keeps those bytes intact.
+    with in_path.open("r", encoding="utf-8", errors="surrogatepass") as inf, out_path.open(
+        "w", encoding="utf-8", errors="surrogatepass"
     ) as outf:
         for line_no, line in enumerate(inf, 1):
             line = line.strip()
@@ -103,7 +107,7 @@ def process_file(in_path: Path, out_path: Path) -> tuple[int, Counter, Counter]:
 
 
 def write_tsv(path: Path, items: list[tuple[str, int]]) -> None:
-    with path.open("w", encoding="utf-8") as fh:
+    with path.open("w", encoding="utf-8", errors="surrogatepass") as fh:
         for key, count in items:
             fh.write(f"{key}\t{count}\n")
 
