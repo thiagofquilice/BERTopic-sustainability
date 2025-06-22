@@ -1,17 +1,29 @@
 #!/usr/bin/env python3
 """Fit a BERTopic model on a JSONL corpus of scientific papers.
 
-This script reads a JSON-Lines file where each line contains a paper record with
-at least ``paperId``, ``title`` and ``abstract`` fields. ``journal`` and ``year``
-are ignored. It loads the file lazily, keeping only the text needed for topic
-modeling. If the abstract is missing, the title is used instead. Records with
-fewer than 50 characters are skipped. Basic preprocessing removes punctuation,
-English stop words and words shorter than three characters before fitting the
-model.
+Each line of the input file must contain at least ``paperId``, ``title`` or
+``abstract`` and ``year``. The file is processed lazily, applying minimal text
+cleaning (punctuation removal, stop word filtering and short word removal).
 
-The resulting topics are written to ``topics.csv`` and the mapping of document
-IDs to their assigned topic is written to ``docs_topics.csv``. The BERTopic model
-is saved to ``bertopic_model`` inside the output directory.
+The command line now mirrors :mod:`analyze_guardian.py`.  You can control the
+random seed with ``--seed`` and optionally restrict the analysis to specific
+publication years using ``--years``.  After fitting the model several outputs
+are written to ``out_dir``:
+
+``papers_bertopic_model``
+    Directory containing the saved BERTopic model.
+``representative_docs.csv``
+    Representative documents for each topic.
+``topic_distribution.csv``
+    Approximate topic distribution for each paper.
+``topics_over_year.csv``
+    Topic frequencies aggregated by publication year.
+``hierarchical_topics.csv``
+    Table describing the hierarchical topic structure.
+``hierarchy.html``
+    Interactive Plotly figure of the topic hierarchy.
+``docs_topics.csv``
+    Mapping of paper IDs and years to their assigned topic.
 """
 from __future__ import annotations
 
@@ -19,10 +31,21 @@ import argparse
 import json
 import re
 from pathlib import Path
-from typing import Iterable, Tuple
+from typing import Tuple
+from datetime import datetime
+
+import numpy as np
 
 import pandas as pd
 from bertopic import BERTopic
+from bertopic.representation import (
+    KeyBERTInspired,
+    MaximalMarginalRelevance,
+    PartOfSpeech,
+)
+from sentence_transformers import SentenceTransformer
+from umap import UMAP
+import plotly.io as pio
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
 
@@ -39,11 +62,12 @@ def preprocess(text: str) -> str:
     return " ".join(tokens)
 
 
-def iter_texts(path: Path) -> Tuple[list[str], list[str]]:
-    """Yield processed text and IDs from ``path``."""
+def iter_texts(path: Path) -> Tuple[list[str], list[str], list[int]]:
+    """Yield processed text, IDs and publication years from ``path``."""
 
     docs: list[str] = []
     ids: list[str] = []
+    years: list[int] = []
     with path.open("r", encoding="utf-8") as f:
         for line in f:
             try:
@@ -51,11 +75,17 @@ def iter_texts(path: Path) -> Tuple[list[str], list[str]]:
             except json.JSONDecodeError:
                 continue
             text = obj.get("abstract") or obj.get("title") or ""
-            if not text or len(text) <= 50:
+            year_val = obj.get("year")
+            try:
+                year = int(year_val)
+            except (TypeError, ValueError):
+                year = None
+            if not text or len(text) <= 50 or year is None:
                 continue
             docs.append(preprocess(text))
             ids.append(obj.get("paperId", ""))
-    return docs, ids
+            years.append(year)
+    return docs, ids, years
 
 
 def ensure_requirements(outdir: Path) -> None:
@@ -67,6 +97,9 @@ def ensure_requirements(outdir: Path) -> None:
         "scikit-learn",
         "sentence-transformers",
         "bertopic>=0.17",
+        "plotly",
+        "scipy",
+        "statsmodels",
     ]
     req = outdir / "requirements.txt"
     if not req.exists():
@@ -79,34 +112,86 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", required=True, help="Path to JSONL file")
     ap.add_argument("--out_dir", required=True, help="Output directory")
+    ap.add_argument("--seed", type=int, default=42, help="Random seed")
+    ap.add_argument(
+        "--years",
+        nargs="+",
+        type=int,
+        help="Only analyze papers from these publication years",
+    )
     args = ap.parse_args()
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     ensure_requirements(out_dir)
 
-    docs, ids = iter_texts(Path(args.input))
+    docs, ids, years = iter_texts(Path(args.input))
     if not docs:
         print("No valid documents found.")
         return
 
-    topic_model = BERTopic(verbose=True)
+    if args.years:
+        yrs = set(args.years)
+        filtered = [
+            (d, i, y)
+            for d, i, y in zip(docs, ids, years)
+            if y in yrs
+        ]
+        if not filtered:
+            print("No papers found for the selected years.")
+            return
+        docs, ids, years = map(list, zip(*filtered))
+
+    np.random.seed(args.seed)
+
+    embedding_model = SentenceTransformer("intfloat/e5-base-v2", device="cpu")
+    representation_model = {
+        "KeyBERT": KeyBERTInspired(),
+        "MMR": MaximalMarginalRelevance(diversity=0.3),
+        "POS": PartOfSpeech("en_core_web_sm"),
+    }
+
+    umap_model = UMAP(random_state=args.seed)
+    topic_model = BERTopic(
+        embedding_model=embedding_model,
+        representation_model=representation_model,
+        calculate_probabilities=False,
+        verbose=True,
+        umap_model=umap_model,
+    )
     topics, _ = topic_model.fit_transform(docs)
 
-    # topics.csv with top 10 words
-    rows = []
-    for tid in sorted(set(topics)):
-        words = topic_model.get_topic(tid)[:10]
-        rows.append({"topic_id": tid, "top_words": " ".join(w for w, _ in words)})
-    pd.DataFrame(rows).to_csv(out_dir / "topics.csv", index=False)
+    dates = [datetime(year=y, month=1, day=1) for y in years]
+    unique_years = sorted({y for y in years})
 
-    # docs_topics.csv mapping paperId to topic
-    pd.DataFrame({"paperId": ids, "topic_id": topics}).to_csv(
-        out_dir / "docs_topics.csv", index=False
+    tots = topic_model.topics_over_time(
+        docs,
+        timestamps=dates,
+        global_tuning=False,
+        nr_bins=len(unique_years),
+    )
+    hier = topic_model.hierarchical_topics(docs)
+    distr, _ = topic_model.approximate_distribution(docs)
+
+    rep_docs = []
+    for topic in topic_model.get_topics().keys():
+        for doc in topic_model.get_representative_docs(topic):
+            rep_docs.append({"topic": topic, "rep_doc": doc})
+    pd.DataFrame(rep_docs).to_csv(out_dir / "representative_docs.csv", index=False)
+
+    pd.DataFrame(distr, index=ids).to_csv(out_dir / "topic_distribution.csv")
+    tots.to_csv(out_dir / "topics_over_year.csv", index=False)
+    pd.DataFrame(hier).to_csv(out_dir / "hierarchical_topics.csv", index=False)
+    pd.DataFrame({"paperId": ids, "year": years, "topic_id": topics}).to_csv(
+        out_dir / "docs_topics.csv",
+        index=False,
     )
 
-    topic_model.save(out_dir / "bertopic_model")
-    print(f"Saved model and CSV files to {out_dir}")
+    topic_model.save(out_dir / "papers_bertopic_model")
+
+    fig = topic_model.visualize_hierarchy()
+    pio.write_html(fig, file=out_dir / "hierarchy.html", auto_open=False)
+    print(f"Analysis complete. Results saved to {out_dir}")
 
 
 if __name__ == "__main__":  # pragma: no cover - CLI entry
