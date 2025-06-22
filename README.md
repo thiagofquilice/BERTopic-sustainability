@@ -37,8 +37,8 @@ python analyze_papers.py --input_file data/papers_sample.json --out_dir results/
 python compare_topics.py \
   --model_a results/guardian/guardian_bertopic_model \
   --model_b results/papers/papers_bertopic_model \
-  --topics_a results/guardian/topics_over_time.csv \
-  --topics_b results/papers/topics_over_time.csv \
+  --topics_a results/guardian/topics_over_year.csv \
+  --topics_b results/papers/topics_over_year.csv \
   --out_dir results/compare
 ```
 
