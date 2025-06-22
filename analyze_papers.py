@@ -24,6 +24,7 @@ from pathlib import Path
 from datetime import datetime
 import pandas as pd
 import numpy as np
+import json
 from bertopic import BERTopic
 from bertopic.representation import (
     KeyBERTInspired,
@@ -41,7 +42,25 @@ def read_data(path: str) -> tuple[list[str], list[int], list[str]]:
     if ext == ".csv":
         df = pd.read_csv(path)
     elif ext in {".jsonl", ".json"}:
-        df = pd.read_json(path, lines=ext == ".jsonl")
+        records = []
+        with open(path, "r", encoding="utf-8") as fh:
+            if ext == ".jsonl":
+                for line in fh:
+                    obj = json.loads(line)
+                    records.append({
+                        "paper_id": obj.get("paper_id"),
+                        "abstract": obj.get("abstract"),
+                        "pub_year": obj.get("pub_year"),
+                    })
+            else:
+                data = json.load(fh)
+                for obj in data:
+                    records.append({
+                        "paper_id": obj.get("paper_id"),
+                        "abstract": obj.get("abstract"),
+                        "pub_year": obj.get("pub_year"),
+                    })
+        df = pd.DataFrame.from_records(records)
     else:
         raise ValueError("Unsupported file type")
     needed = {"paper_id", "abstract", "pub_year"}
