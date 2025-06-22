@@ -5,9 +5,8 @@ This script reads a JSON-Lines file where each line contains a paper record with
 at least ``paperId``, ``title`` and ``abstract`` fields. ``journal`` and ``year``
 are ignored. It loads the file lazily, keeping only the text needed for topic
 modeling. If the abstract is missing, the title is used instead. Records with
-fewer than 50 characters are skipped. Basic preprocessing removes punctuation,
-English stop words and words shorter than three characters before fitting the
-model.
+fewer than 50 characters are skipped. No text preprocessing is performed before
+fitting the model.
 
 The resulting topics are written to ``topics.csv`` and the mapping of document
 IDs to their assigned topic is written to ``docs_topics.csv``. The BERTopic model
@@ -17,30 +16,15 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 from pathlib import Path
 from typing import Iterable, Tuple
 
 import pandas as pd
 from bertopic import BERTopic
-from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
-
-
-STOPWORDS = set(ENGLISH_STOP_WORDS)
-RE_PUNCT = re.compile(r"[^\w\s]")
-
-
-def preprocess(text: str) -> str:
-    """Lowercase ``text`` and remove stop words and punctuation."""
-
-    text = text.lower()
-    text = RE_PUNCT.sub(" ", text)
-    tokens = [w for w in text.split() if len(w) >= 3 and w not in STOPWORDS]
-    return " ".join(tokens)
 
 
 def iter_texts(path: Path) -> Tuple[list[str], list[str]]:
-    """Yield processed text and IDs from ``path``."""
+    """Yield text and IDs from ``path``."""
 
     docs: list[str] = []
     ids: list[str] = []
@@ -50,10 +34,10 @@ def iter_texts(path: Path) -> Tuple[list[str], list[str]]:
                 obj = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            text = obj.get("abstract") or obj.get("title") or ""
+            text = (obj.get("abstract") or obj.get("title") or "").strip()
             if not text or len(text) <= 50:
                 continue
-            docs.append(preprocess(text))
+            docs.append(text)
             ids.append(obj.get("paperId", ""))
     return docs, ids
 
