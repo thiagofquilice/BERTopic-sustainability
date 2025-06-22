@@ -43,7 +43,11 @@ def read_data(path: str) -> tuple[list[str], list[int], list[str]]:
         df = pd.read_csv(path)
     elif ext in {".jsonl", ".json"}:
         records = []
-        with open(path, "r", encoding="utf-8") as fh:
+        # ``fix_count_papers.py`` writes JSONL using ``surrogatepass`` to
+        # preserve potentially malformed Unicode. Opening the file with the
+        # same error handler ensures we can read those bytes back without
+        # raising ``UnicodeDecodeError``.
+        with open(path, "r", encoding="utf-8", errors="surrogatepass") as fh:
             if ext == ".jsonl":
                 for line in fh:
                     obj = json.loads(line)
