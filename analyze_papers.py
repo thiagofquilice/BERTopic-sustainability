@@ -134,10 +134,8 @@ def main() -> None:
 
         texts, years, ids = map(list, zip(*filtered))
 
-    # Prepare yearly timestamps for grouping by calendar year
-    dates = [datetime(year=y, month=1, day=1) for y in years]
-    unique_years = sorted({d.year for d in dates})
-    year_stamps = [datetime(year=d.year, month=1, day=1) for d in dates]
+    # Prepare year labels for grouping by calendar year
+    year_labels = pd.to_datetime(years, format="%Y").year.tolist()
 
     np.random.seed(args.seed)
 
@@ -160,9 +158,8 @@ def main() -> None:
 
     tots = topic_model.topics_over_time(
         texts,
-        timestamps=year_stamps,
+        timestamps=year_labels,
         global_tuning=False,
-        nr_bins=len(unique_years),
     )
     hier = topic_model.hierarchical_topics(texts)
     distr, _ = topic_model.approximate_distribution(texts)
