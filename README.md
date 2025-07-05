@@ -1,3 +1,8 @@
+## v1.1 (2025-07-05)
+- Added stop-word removal using scikit-learn
+- Results now limited to years 2000-2025
+- Added unit-test suite (`pytest`)
+
 # BERTopic Sustainability
 
 
