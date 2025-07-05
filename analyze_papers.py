@@ -21,7 +21,6 @@ explore how research topics evolve over the years.
 from __future__ import annotations
 import argparse
 from pathlib import Path
-from datetime import datetime
 import pandas as pd
 import numpy as np
 import json
@@ -51,19 +50,23 @@ def read_data(path: str) -> tuple[list[str], list[int], list[str]]:
             if ext == ".jsonl":
                 for line in fh:
                     obj = json.loads(line)
-                    records.append({
-                        "paper_id": obj.get("paper_id"),
-                        "abstract": obj.get("abstract"),
-                        "pub_year": obj.get("pub_year"),
-                    })
+                    records.append(
+                        {
+                            "paper_id": obj.get("paper_id"),
+                            "abstract": obj.get("abstract"),
+                            "pub_year": obj.get("pub_year"),
+                        }
+                    )
             else:
                 data = json.load(fh)
                 for obj in data:
-                    records.append({
-                        "paper_id": obj.get("paper_id"),
-                        "abstract": obj.get("abstract"),
-                        "pub_year": obj.get("pub_year"),
-                    })
+                    records.append(
+                        {
+                            "paper_id": obj.get("paper_id"),
+                            "abstract": obj.get("abstract"),
+                            "pub_year": obj.get("pub_year"),
+                        }
+                    )
         df = pd.DataFrame.from_records(records)
     else:
         raise ValueError("Unsupported file type")
@@ -123,11 +126,7 @@ def main() -> None:
 
     if args.years:
         yrs = set(args.years)
-        filtered = [
-            (t, y, i)
-            for t, y, i in zip(texts, years, ids)
-            if y in yrs
-        ]
+        filtered = [(t, y, i) for t, y, i in zip(texts, years, ids) if y in yrs]
         if not filtered:
             print("No papers found for the selected years.")
             return
@@ -145,7 +144,7 @@ def main() -> None:
         "MMR": MaximalMarginalRelevance(diversity=0.3),
         "POS": PartOfSpeech("en_core_web_sm"),
     }
-    
+
     umap_model = UMAP(random_state=args.seed)
     topic_model = BERTopic(
         embedding_model=embedding_model,

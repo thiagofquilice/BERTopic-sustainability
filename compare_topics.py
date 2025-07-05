@@ -48,7 +48,9 @@ def jaccard_matrix(mod_a: BERTopic, mod_b: BERTopic, topn: int = 20) -> pd.DataF
             inter = len(vocab_a[ta] & vocab_b[tb])
             union = len(vocab_a[ta] | vocab_b[tb])
             jac[i, j] = inter / union if union else 0.0
-    return pd.DataFrame(jac, index=[f"A_{t}" for t in vocab_a], columns=[f"B_{t}" for t in vocab_b])
+    return pd.DataFrame(
+        jac, index=[f"A_{t}" for t in vocab_a], columns=[f"B_{t}" for t in vocab_b]
+    )
 
 
 def top_matches(mat: np.ndarray, n: int = 5) -> list[tuple[int, int, float]]:
@@ -80,7 +82,11 @@ def main() -> None:
     model_b = load_model(args.model_b)
 
     mat = cosine_matrix(model_a.topic_embeddings_, model_b.topic_embeddings_)
-    cos_df = pd.DataFrame(mat, index=[f"A_{i}" for i in range(mat.shape[0])], columns=[f"B_{j}" for j in range(mat.shape[1])])
+    cos_df = pd.DataFrame(
+        mat,
+        index=[f"A_{i}" for i in range(mat.shape[0])],
+        columns=[f"B_{j}" for j in range(mat.shape[1])],
+    )
     cos_df.to_csv(out_dir / "cosine_similarity.csv")
 
     print("Top cosine similarities:")
@@ -94,8 +100,20 @@ def main() -> None:
     fig.write_html(out_dir / "similarity_heatmap.html", auto_open=False)
 
     # Temporal series comparison using topics_over_time files
-    ts_a = pd.read_csv(args.topics_a).pivot_table(index="Timestamp", columns="Topic", values="Frequency", aggfunc="sum").fillna(0)
-    ts_b = pd.read_csv(args.topics_b).pivot_table(index="Timestamp", columns="Topic", values="Frequency", aggfunc="sum").fillna(0)
+    ts_a = (
+        pd.read_csv(args.topics_a)
+        .pivot_table(
+            index="Timestamp", columns="Topic", values="Frequency", aggfunc="sum"
+        )
+        .fillna(0)
+    )
+    ts_b = (
+        pd.read_csv(args.topics_b)
+        .pivot_table(
+            index="Timestamp", columns="Topic", values="Frequency", aggfunc="sum"
+        )
+        .fillna(0)
+    )
 
     temporal = []
     pairs = top_matches(mat)[:5]
@@ -105,11 +123,22 @@ def main() -> None:
         s1 = ts_a.iloc[:, i]
         s2 = ts_b.iloc[:, j]
         try:
-            granger = grangercausalitytests(pd.concat([s1, s2], axis=1).dropna(), maxlag=6, verbose=False)
-            pvals = [round(granger[l][0]['ssr_chi2test'][1], 4) for l in range(1, 7)]
+            granger = grangercausalitytests(
+                pd.concat([s1, s2], axis=1).dropna(), maxlag=6, verbose=False
+            )
+            pvals = [
+                round(granger[lag][0]["ssr_chi2test"][1], 4) for lag in range(1, 7)
+            ]
         except Exception:
             pvals = [np.nan] * 6
-        temporal.append({"topic_A": i, "topic_B": j, "max_corr": s1.corr(s2), "granger_pvals": pvals})
+        temporal.append(
+            {
+                "topic_A": i,
+                "topic_B": j,
+                "max_corr": s1.corr(s2),
+                "granger_pvals": pvals,
+            }
+        )
     pd.DataFrame(temporal).to_csv(out_dir / "temporal_correlation.csv", index=False)
     print(f"Results saved to {out_dir}")
 
