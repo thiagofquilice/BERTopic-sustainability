@@ -107,3 +107,12 @@ The snippet below demonstrates how to configure a virtual environment and run
 
 Once the environment is set up you can reuse it for future runs without
 recreating the virtual environment or reinstalling dependencies.
+
+## Finishing a tmux session
+
+See *Running on a remote server* above for how to start a session.
+
+- Detach and keep the job running:   <Ctrl-b> then d
+- Re-attach later:                   tmux attach -t <session_name>
+- End the script inside tmux:        press Ctrl-c or type 'exit'
+- Kill the entire tmux session:      tmux kill-session -t <session_name>

@@ -2,9 +2,9 @@
 """Analyze scientific paper abstracts with BERTopic.
 
 If you have a dataset of academic publications and want to uncover the common
-themes, this script can help. It requires minimal expertise: supply a spreadsheet
-or JSON file with article abstracts and the year of publication, and BERTopic
-will cluster similar abstracts together.
+themes, this script can help. It requires minimal expertise: supply a
+spreadsheet or JSON file with article abstracts and the year of publication, and
+BERTopic will cluster similar abstracts together.
 
 The input file must contain ``paper_id``, ``abstract`` and ``pub_year`` columns.
 Important arguments you can change:
@@ -13,10 +13,22 @@ Important arguments you can change:
 ``--out_dir`` – folder for saving the model and outputs.
 ``--seed`` – random seed so you can reproduce the same topics.
 ``--years`` – optional list of publication years to include.
+``--start_year`` – first year of the range to keep.
+``--end_year`` – last year of the range to keep.
 
-The script stores the trained model, topic distributions, temporal trends and
-an interactive hierarchy visualization inside ``out_dir``. These outputs let you
+The script stores the trained model, topic distributions, temporal trends and an
+interactive hierarchy visualization inside ``out_dir``. These outputs let you
 explore how research topics evolve over the years.
+
+Change ``START_YEAR`` / ``END_YEAR`` above or pass ``--start_year`` /
+``--end_year`` when running.
+
+Quick start
+-----------
+python analyze_papers.py \
+  --input_file data/papers_sample.json \
+  --out_dir results/papers \
+  --start_year 2000 --end_year 2025
 """
 from __future__ import annotations
 import argparse
@@ -33,6 +45,17 @@ from bertopic.representation import (
 from sentence_transformers import SentenceTransformer
 from umap import UMAP
 import plotly.io as pio
+
+# ---- YEAR FILTER SETTINGS (edit here or via CLI) ------------------
+START_YEAR = 2000   # first year to keep
+END_YEAR = 2025     # last  year to keep
+# -------------------------------------------------------------------
+
+
+def filter_by_year(year: int | datetime, start: int, end: int) -> bool:
+    """Return ``True`` if ``year`` falls within ``start`` and ``end``."""
+    yr = year.year if hasattr(year, "year") else int(year)
+    return start <= yr <= end
 
 
 def read_data(path: str) -> tuple[list[str], list[int], list[str]]:
@@ -103,6 +126,8 @@ def main() -> None:
     ap.add_argument("--input_file", required=True)
     ap.add_argument("--out_dir", required=True)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--start_year", type=int, default=START_YEAR)
+    ap.add_argument("--end_year", type=int, default=END_YEAR)
     ap.add_argument(
         "--years",
         nargs="+",
@@ -124,14 +149,19 @@ def main() -> None:
         print("No valid documents found.")
         return
 
+    filtered = [
+        (t, y, i)
+        for t, y, i in zip(texts, years, ids)
+        if filter_by_year(y, args.start_year, args.end_year)
+    ]
     if args.years:
         yrs = set(args.years)
-        filtered = [(t, y, i) for t, y, i in zip(texts, years, ids) if y in yrs]
-        if not filtered:
-            print("No papers found for the selected years.")
-            return
+        filtered = [f for f in filtered if f[1] in yrs]
+    if not filtered:
+        print("No papers found for the selected years.")
+        return
 
-        texts, years, ids = map(list, zip(*filtered))
+    texts, years, ids = map(list, zip(*filtered))
 
     # Prepare year labels for grouping by calendar year
     year_labels = pd.to_datetime(years, format="%Y").year.tolist()
