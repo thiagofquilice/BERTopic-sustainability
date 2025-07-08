@@ -16,10 +16,22 @@ and ``date``. Key command-line arguments are:
 ``--out_dir`` – directory where all outputs are saved.
 ``--seed`` – random seed controlling the model initialization.
 ``--years`` – optional list of years to include in the analysis.
+``--start_year`` – first year of the range to keep.
+``--end_year`` – last year of the range to keep.
 
 Results include the trained BERTopic model, topic distributions, hierarchical
 visualizations and more. Use these files to interpret how articles discuss
 sustainability-related topics over time.
+
+Change ``START_YEAR`` / ``END_YEAR`` above or pass ``--start_year`` /
+``--end_year`` when running.
+
+Quick start
+-----------
+python analyze_guardian.py \
+  --input_file data/guardian_sample.json \
+  --out_dir results/guardian \
+  --start_year 2000 --end_year 2025
 """
 from __future__ import annotations
 import argparse
@@ -36,6 +48,17 @@ from bertopic.representation import (
 from sentence_transformers import SentenceTransformer
 from umap import UMAP
 import plotly.io as pio
+
+# ---- YEAR FILTER SETTINGS (edit here or via CLI) ------------------
+START_YEAR = 2000   # first year to keep
+END_YEAR = 2025     # last  year to keep
+# -------------------------------------------------------------------
+
+
+def filter_by_year(ts: datetime, start: int, end: int) -> bool:
+    """Return ``True`` if ``ts`` falls within ``start`` and ``end``."""
+    year = ts.year if isinstance(ts, datetime) else int(ts)
+    return start <= year <= end
 
 
 def read_data(path: str, date_format: str) -> tuple[list[str], list[datetime], list[str]]:
@@ -83,6 +106,8 @@ def main() -> None:
     ap.add_argument("--date_format", default="%Y-%m-%d")
     ap.add_argument("--out_dir", required=True)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--start_year", type=int, default=START_YEAR)
+    ap.add_argument("--end_year", type=int, default=END_YEAR)
     ap.add_argument(
         "--years",
         nargs="+",
@@ -104,17 +129,18 @@ def main() -> None:
         print("No valid documents found.")
         return
 
+    filtered = [
+        (t, d, i)
+        for t, d, i in zip(texts, dates, doc_ids)
+        if filter_by_year(d, args.start_year, args.end_year)
+    ]
     if args.years:
         yrs = set(args.years)
-        filtered = [
-            (t, d, i)
-            for t, d, i in zip(texts, dates, doc_ids)
-            if d.year in yrs
-        ]
-        if not filtered:
-            print("No documents found for the selected years.")
-            return
-        texts, dates, doc_ids = map(list, zip(*filtered))
+        filtered = [f for f in filtered if f[1].year in yrs]
+    if not filtered:
+        print("No documents found for the selected years.")
+        return
+    texts, dates, doc_ids = map(list, zip(*filtered))
 
     # Prepare year labels for grouping by calendar year
     year_labels = pd.to_datetime(dates).year.tolist()

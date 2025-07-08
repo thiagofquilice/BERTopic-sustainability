@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
-"""Count paper abstracts by publication year."""
+"""Count paper abstracts by publication year.
+
+Change ``START_YEAR`` / ``END_YEAR`` above or pass ``--start_year`` /
+``--end_year`` when running.
+
+Quick start
+-----------
+python count_abstracts_by_year.py \
+  --input_file data/papers_sample.jsonl \
+  --out_dir results/counts \
+  --start_year 2000 --end_year 2025
+"""
 from __future__ import annotations
 
 import argparse
@@ -7,6 +18,17 @@ from pathlib import Path
 
 import pandas as pd
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+
+# ---- YEAR FILTER SETTINGS (edit here or via CLI) ------------------
+START_YEAR = 2000   # first year to keep
+END_YEAR = 2025     # last  year to keep
+# -------------------------------------------------------------------
+
+
+def filter_by_year(year: int | float | str, start: int, end: int) -> bool:
+    """Return ``True`` if ``year`` falls within ``start`` and ``end``."""
+    yr = int(year)
+    return start <= yr <= end
 
 
 def clean_text(text: str) -> str:
@@ -37,7 +59,7 @@ def read_data(path: str) -> pd.DataFrame:
 
 
 def ensure_requirements(outdir: Path) -> None:
-    """Ensure ``scikit-learn`` and ``pytest`` are listed in ``requirements.txt``."""
+    """Ensure scikit-learn and pytest appear in ``requirements.txt``."""
     req_file = outdir / "requirements.txt"
     if req_file.exists():
         lines = req_file.read_text().splitlines()
@@ -56,6 +78,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--input_file", required=True)
     ap.add_argument("--out_dir", required=True)
+    ap.add_argument("--start_year", type=int, default=START_YEAR)
+    ap.add_argument("--end_year", type=int, default=END_YEAR)
     args = ap.parse_args()
 
     out_dir = Path(args.out_dir)
@@ -63,9 +87,10 @@ def main() -> None:
     ensure_requirements(out_dir)
 
     df = read_data(args.input_file)
-    df = df[(df["pub_year"] >= 2000) & (df["pub_year"] <= 2025)]
+    df = df[df["pub_year"].apply(lambda y: filter_by_year(y, args.start_year,
+                                            args.end_year))]
     if df.empty:
-        print("No abstracts found in the 2000-2025 range.")
+        print("No abstracts found in the selected range.")
         return
 
     counts = df["pub_year"].value_counts().sort_index()
