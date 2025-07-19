@@ -116,3 +116,25 @@ See *Running on a remote server* above for how to start a session.
 - Re-attach later:                   tmux attach -t <session_name>
 - End the script inside tmux:        press Ctrl-c or type 'exit'
 - Kill the entire tmux session:      tmux kill-session -t <session_name>
+
+## Hierarchical topic tree
+
+To visualize topics as a hierarchy use the targets defined in the Makefile:
+
+```bash
+make tree-guardian  # for Guardian paragraphs
+make tree-papers    # for paper abstracts
+```
+
+Each command reads the saved model in `results/<dataset>` and writes the tree to
+`results/<dataset>/topic_tree.txt`.
+
+You can also call the script directly:
+
+```bash
+python utils/visualize_tree.py --model_path results/guardian/guardian_bertopic_model \
+    --output_file results/guardian/topic_tree.txt
+```
+
+Adjust the paths for your dataset.
+
