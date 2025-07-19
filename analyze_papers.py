@@ -201,11 +201,12 @@ def main() -> None:
 
     umap_model = UMAP(random_state=args.seed)
     topic_model = BERTopic(
+        nr_topics="auto",
         embedding_model=embedding_model,
         representation_model=representation_model,
+        umap_model=umap_model,
         calculate_probabilities=False,
         verbose=True,
-        umap_model=umap_model,
     )
     topic_model.fit(texts)
 
