@@ -37,6 +37,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 from datetime import datetime
+import subprocess
 import pandas as pd
 import numpy as np
 from bertopic import BERTopic
@@ -96,6 +97,29 @@ def ensure_requirements(outdir: Path) -> None:
     req = outdir / "requirements.txt"
     if not req.exists():
         req.write_text("\n".join(reqs))
+
+
+def write_topic_tree(dataset: str) -> None:
+    """Generate a plain-text topic tree for ``dataset`` results."""
+
+    base = Path("results") / dataset
+    model_path = None
+    for p in base.glob("*_bertopic_model*"):
+        if p.is_dir() or p.suffix in {".zip", ".pkl"}:
+            model_path = p
+            break
+    if model_path is None:
+        print(f"No saved model found in {base}")
+        return
+    hier_csv = base / "hierarchical_topics.csv"
+    out_txt = base / "topic_tree.txt"
+    try:
+        subprocess.run(
+            ["python", "utils/visualize_tree.py", str(model_path), str(hier_csv), str(out_txt)],
+            check=True,
+        )
+    except Exception as exc:
+        print(f"Failed to write topic tree for {dataset}: {exc}")
 
 
 def main() -> None:
@@ -190,3 +214,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    write_topic_tree("guardian")
