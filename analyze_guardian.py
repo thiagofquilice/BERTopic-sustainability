@@ -49,6 +49,7 @@ from bertopic.representation import (
 from sentence_transformers import SentenceTransformer
 from umap import UMAP
 import plotly.io as pio
+import plotly
 
 # ---- YEAR FILTER SETTINGS (edit here or via CLI) ------------------
 START_YEAR = 2000   # first year to keep
@@ -188,6 +189,14 @@ def main() -> None:
         verbose=True,
     )
     topic_model.fit(texts)
+
+    # ---- Export topic hierarchy ----
+    tree_df = topic_model.get_topic_tree()
+    tree_df.to_csv("guardian_topic_tree.csv", index=False)
+
+    fig = topic_model.visualize_hierarchy(top_n_topics=None)
+    fig.write_html("guardian_topic_tree.html")
+    # --------------------------------
 
     tots = topic_model.topics_over_time(
         texts,
