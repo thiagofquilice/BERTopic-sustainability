@@ -226,8 +226,11 @@ def main() -> None:
 
     topic_model.reduce_topics(texts, threshold=args.threshold)
     hier = topic_model.hierarchical_topics(texts)
-    tree_df = topic_model.get_topic_tree(hier)
-    tree_df.to_csv(out_dir / "topic_tree.csv", index=False)
+    tree = topic_model.get_topic_tree(hier)
+    if hasattr(tree, "to_csv"):
+        tree.to_csv(out_dir / "topic_tree.csv", index=False)
+    else:
+        Path(out_dir, "topic_tree.txt").write_text(str(tree))
 
     fig = topic_model.visualize_hierarchy(top_n_topics=None)
     fig.write_html("papers_topic_tree.html")
