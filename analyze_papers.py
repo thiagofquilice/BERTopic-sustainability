@@ -151,6 +151,12 @@ def main() -> None:
     ap.add_argument("--input_file", required=True)
     ap.add_argument("--out_dir", required=True)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument(
+        "--sim_thresh",
+        type=float,
+        default=0.15,
+        help="Cosine-distance threshold for merging",
+    )
     ap.add_argument("--start_year", type=int, default=START_YEAR)
     ap.add_argument("--end_year", type=int, default=END_YEAR)
     ap.add_argument(
@@ -202,7 +208,6 @@ def main() -> None:
 
     umap_model = UMAP(random_state=args.seed)
     topic_model = BERTopic(
-        nr_topics="auto",
         embedding_model=embedding_model,
         representation_model=representation_model,
         umap_model=umap_model,
@@ -211,9 +216,10 @@ def main() -> None:
     )
     topic_model.fit(texts)
 
-    # ---- Export topic hierarchy ----
-    tree_df = topic_model.get_topic_tree()
-    tree_df.to_csv("papers_topic_tree.csv", index=False)
+    topic_model.reduce_topics(texts, similarity_threshold=args.sim_thresh)
+    hier = topic_model.hierarchical_topics(texts)
+    tree_df = topic_model.get_topic_tree(hier)
+    tree_df.to_csv(out_dir / "topic_tree.csv", index=False)
 
     fig = topic_model.visualize_hierarchy(top_n_topics=None)
     fig.write_html("papers_topic_tree.html")
@@ -224,7 +230,6 @@ def main() -> None:
         timestamps=year_labels,
         global_tuning=False,
     )
-    hier = topic_model.hierarchical_topics(texts)
     distr, _ = topic_model.approximate_distribution(texts)
 
     topic_model.save(out_dir / "papers_bertopic_model")
