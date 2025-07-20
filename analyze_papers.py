@@ -4,7 +4,8 @@
 If you have a dataset of academic publications and want to uncover the common
 themes, this script can help. It requires minimal expertise: supply a
 spreadsheet or JSON file with article abstracts and the year of publication, and
-BERTopic will cluster similar abstracts together.
+BERTopic will cluster similar abstracts together. The number of topics is
+chosen automatically by the library and cannot be set manually.
 
 The input file must contain ``paper_id``, ``abstract`` and ``pub_year`` columns.
 Important arguments you can change:
@@ -15,6 +16,7 @@ Important arguments you can change:
 ``--years`` – optional list of publication years to include.
 ``--start_year`` – first year of the range to keep.
 ``--end_year`` – last year of the range to keep.
+``--threshold`` – similarity threshold used when reducing topics.
 
 The script stores the trained model, topic distributions, temporal trends and an
 interactive hierarchy visualization inside ``out_dir``. These outputs let you
@@ -49,8 +51,8 @@ import plotly.io as pio
 import plotly
 
 # ---- YEAR FILTER SETTINGS (edit here or via CLI) ------------------
-START_YEAR = 2000   # first year to keep
-END_YEAR = 2025     # last  year to keep
+START_YEAR = 2000  # first year to keep
+END_YEAR = 2025  # last  year to keep
 # -------------------------------------------------------------------
 
 
@@ -137,7 +139,13 @@ def write_topic_tree(dataset: str) -> None:
     out_txt = base / "topic_tree.txt"
     try:
         subprocess.run(
-            ["python", "utils/visualize_tree.py", str(model_path), str(hier_csv), str(out_txt)],
+            [
+                "python",
+                "utils/visualize_tree.py",
+                str(model_path),
+                str(hier_csv),
+                str(out_txt),
+            ],
             check=True,
         )
     except Exception as exc:
@@ -152,10 +160,10 @@ def main() -> None:
     ap.add_argument("--out_dir", required=True)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument(
-        "--sim_thresh",
+        "--threshold",
         type=float,
         default=0.15,
-        help="Cosine-distance threshold for merging",
+        help="Cosine similarity threshold for merging topics during reduction",
     )
     ap.add_argument("--start_year", type=int, default=START_YEAR)
     ap.add_argument("--end_year", type=int, default=END_YEAR)
@@ -216,7 +224,7 @@ def main() -> None:
     )
     topic_model.fit(texts)
 
-    topic_model.reduce_topics(texts, similarity_threshold=args.sim_thresh)
+    topic_model.reduce_topics(texts, threshold=args.threshold)
     hier = topic_model.hierarchical_topics(texts)
     tree_df = topic_model.get_topic_tree(hier)
     tree_df.to_csv(out_dir / "topic_tree.csv", index=False)

@@ -5,7 +5,8 @@ This script is intended for researchers or journalists who want to quickly
 discover themes in articles from *The Guardian*. Even if you are unfamiliar with
 topic modeling, the process is largely automated. Provide a data file with
 paragraphs, run the script, and it will group similar paragraphs together and
-create several helpful files and visualizations.
+create several helpful files and visualizations. The number of topics is
+determined automatically by BERTopic; you cannot set it explicitly.
 
 Input must be a CSV or JSON file containing the columns ``id``, ``paragraphs``
 and ``date``. Key command-line arguments are:
@@ -52,8 +53,8 @@ import plotly.io as pio
 import plotly
 
 # ---- YEAR FILTER SETTINGS (edit here or via CLI) ------------------
-START_YEAR = 2000   # first year to keep
-END_YEAR = 2025     # last  year to keep
+START_YEAR = 2000  # first year to keep
+END_YEAR = 2025  # last  year to keep
 # -------------------------------------------------------------------
 
 
@@ -63,7 +64,9 @@ def filter_by_year(ts: datetime, start: int, end: int) -> bool:
     return start <= year <= end
 
 
-def read_data(path: str, date_format: str) -> tuple[list[str], list[datetime], list[str]]:
+def read_data(
+    path: str, date_format: str
+) -> tuple[list[str], list[datetime], list[str]]:
     """Load Guardian data from CSV or JSONL."""
     ext = Path(path).suffix.lower()
     if ext == ".csv":
@@ -116,7 +119,13 @@ def write_topic_tree(dataset: str) -> None:
     out_txt = base / "topic_tree.txt"
     try:
         subprocess.run(
-            ["python", "utils/visualize_tree.py", str(model_path), str(hier_csv), str(out_txt)],
+            [
+                "python",
+                "utils/visualize_tree.py",
+                str(model_path),
+                str(hier_csv),
+                str(out_txt),
+            ],
             check=True,
         )
     except Exception as exc:
@@ -131,12 +140,6 @@ def main() -> None:
     ap.add_argument("--date_format", default="%Y-%m-%d")
     ap.add_argument("--out_dir", required=True)
     ap.add_argument("--seed", type=int, default=42)
-    ap.add_argument(
-        "--sim_thresh",
-        type=float,
-        default=0.15,
-        help="Cosine-distance threshold for merging",
-    )
     ap.add_argument("--start_year", type=int, default=START_YEAR)
     ap.add_argument("--end_year", type=int, default=END_YEAR)
     ap.add_argument(
@@ -195,7 +198,7 @@ def main() -> None:
     )
     topic_model.fit(texts)
 
-    topic_model.reduce_topics(texts, similarity_threshold=args.sim_thresh)
+    # Topic reduction removed in BERTopic >= 0.17
     hier = topic_model.hierarchical_topics(texts)
     tree_df = topic_model.get_topic_tree(hier)
     tree_df.to_csv(out_dir / "topic_tree.csv", index=False)
