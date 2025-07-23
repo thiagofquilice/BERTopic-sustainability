@@ -16,7 +16,6 @@ Important arguments you can change:
 ``--years`` – optional list of publication years to include.
 ``--start_year`` – first year of the range to keep.
 ``--end_year`` – last year of the range to keep.
-``--threshold`` – similarity threshold used when reducing topics.
 
 The script stores the trained model, topic distributions, temporal trends and an
 interactive hierarchy visualization inside ``out_dir``. These outputs let you
@@ -159,12 +158,6 @@ def main() -> None:
     ap.add_argument("--input_file", required=True)
     ap.add_argument("--out_dir", required=True)
     ap.add_argument("--seed", type=int, default=42)
-    ap.add_argument(
-        "--threshold",
-        type=float,
-        default=0.15,
-        help="Cosine similarity threshold for merging topics during reduction",
-    )
     ap.add_argument("--start_year", type=int, default=START_YEAR)
     ap.add_argument("--end_year", type=int, default=END_YEAR)
     ap.add_argument(
@@ -223,8 +216,7 @@ def main() -> None:
         verbose=True,
     )
     topic_model.fit(texts)
-
-    topic_model.reduce_topics(texts, threshold=args.threshold)
+    # Topic reduction removed in BERTopic >= 0.17
     hier = topic_model.hierarchical_topics(texts)
     tree = topic_model.get_topic_tree(hier)
     if hasattr(tree, "to_csv"):
