@@ -34,6 +34,7 @@ python analyze_papers.py \
 from __future__ import annotations
 import argparse
 from pathlib import Path
+from datetime import datetime
 import pandas as pd
 import numpy as np
 import json
@@ -222,10 +223,7 @@ def main() -> None:
     if hasattr(tree, "to_csv"):
         tree.to_csv(out_dir / "topic_tree.csv", index=False)
     else:
-        if isinstance(tree, list):
-            Path(out_dir, "topic_tree.txt").write_text("\n".join(tree))
-        else:
-            Path(out_dir, "topic_tree.txt").write_text(str(tree))
+        Path(out_dir, "topic_tree.txt").write_text(str(tree))
 
     fig = topic_model.visualize_hierarchy(top_n_topics=None)
     fig.write_html("papers_topic_tree.html")
